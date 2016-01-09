@@ -39,6 +39,23 @@ void add_line_from_parent(line *parent, line *l, int line_no, char *text)
     }
 }
 
+void reset_listing(line *listing)
+{
+    if (listing == NULL) return;
+
+    reset_listing(listing->left);
+    reset_listing(listing->right);
+    /* listing->text is only NULL if this is the root node, which we
+     * do not allocate */
+    if (listing->text) {
+        free(listing->text);
+        free(listing);
+    } else {
+        listing->left = NULL;
+        listing->right = NULL;
+    }
+}
+
 void save_listing(line *listing, char *filename)
 {
     FILE *f;
@@ -47,6 +64,7 @@ void save_listing(line *listing, char *filename)
         /* handle error */
     } else {
         write_listing(listing, f);
+        fclose(f);
     }
 }
 

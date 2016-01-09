@@ -1,11 +1,15 @@
 %{
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "listing.h"
 #include "stack.h"
 
 #define MAX_LINE 1024
+
+extern FILE *yyin;
+int yylex(void);
 
 void yyerror(char const *s) 
 {
@@ -18,6 +22,8 @@ union argument {
     int integer;
     char *string;
 };
+
+static FILE *old_yyin = NULL;
 
 static int current_line;
 static stack st;
@@ -40,7 +46,7 @@ void eval(void);
 
 %token ADD SUB MUL DIV EXPT
 %token GOSUB GOTO IF LET PRINT RETURN
-%token LIST SAVE
+%token LIST LOAD NEW SAVE
 %token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
 
@@ -55,7 +61,6 @@ void eval(void);
 %%
 
 line: /* nothing */
-| line STRING EOL { puts($2); }
 | line PROG_LINE EOL {
     char buf[MAX_LINE];
     drop_number($2, buf);
@@ -67,6 +72,8 @@ line: /* nothing */
 statement: gosub_stmt
          | goto_stmt
          | list_stmt
+         | load_stmt
+         | new_stmt
          | return_stmt
          | save_stmt
 ;
@@ -88,6 +95,17 @@ list_stmt: LIST {
  }
 ;
 
+load_stmt: LOAD STRING {
+    current_statement.command = LOAD;
+    current_statement.arg1.string = $2;
+ }
+;
+
+new_stmt: NEW {
+    reset_listing(&lst);
+ }
+;
+
 return_stmt: RETURN {
     current_statement.command = RETURN;
  }
@@ -100,6 +118,18 @@ save_stmt: SAVE STRING {
 ;
 
 %%
+
+int yywrap(void)
+{
+    if (old_yyin) {
+        fclose(yyin);
+        yyin = old_yyin;
+        old_yyin = NULL;
+        return 0;
+    } else {
+        return 1;
+    }
+}
 
 int main(void)
 {
@@ -116,6 +146,12 @@ void eval() {
         break;
     case LIST:
         write_listing(&lst, stdout);
+        break;
+    case LOAD:
+        reset_listing(&lst);
+        old_yyin = yyin;
+        yyin = fopen(current_statement.arg1.string, "r");
+        break;
     case RETURN:
         current_line = pop(&st);
         break;

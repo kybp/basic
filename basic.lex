@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "basic.tab.h"
+
+void yyerror(char const *s);
+
 %}
 
 ID [-_0-9a-z]+
@@ -33,6 +36,8 @@ ID [-_0-9a-z]+
 "return"         { return RETURN; }
 
 "list"           { return LIST; }
+"load"           { return LOAD; }
+"new"            { return NEW;  }
 "save"           { return SAVE; }
 
 "<"              { return LT; }
