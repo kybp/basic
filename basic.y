@@ -6,6 +6,17 @@ void yyerror (char const *s)
     fprintf(stderr, "%s\n", s);
 }
 
+union argument {
+    int integer;
+    char *string;
+};
+
+struct {
+    int command;
+    union argument arg1;
+    union argument arg2;
+} current_statement;
+
 %}
 
 %union {
@@ -15,7 +26,7 @@ void yyerror (char const *s)
 }
 
 %token ADD SUB MUL DIV EXPT
-%token GOSUB GOTO IF LET PRINT RETURN THEN
+%token GOSUB GOTO IF LET PRINT RETURN
 %token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
 
@@ -28,9 +39,26 @@ void yyerror (char const *s)
 
 %%
 
-line: statement EOL
+line: /* nothing */
+| line INTEGER statement EOL
+| line statement EOL
+;
 
-statement: GOSUB INTEGER { printf("gosub %d\n", $2); };
+statement: gosub_stmt
+         | goto_stmt
+;
+
+gosub_stmt: GOSUB INTEGER {
+    current_statement.command = GOSUB;
+    current_statement.arg1.integer = $2;
+ }
+;
+
+goto_stmt: GOTO INTEGER {
+    current_statement.command = GOTO;
+    current_statement.arg1.integer = $2;
+ }
+;
 
 %%
 

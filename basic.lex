@@ -28,7 +28,6 @@ ID [-_0-9a-z]+
 "print"         { return PRINT;  }
 "rem"[^\n]*     { /* ignore comments */ }
 "return"        { return RETURN; }
-"then"          { return THEN;   }
 
 "<"             { return LT; }
 "<="            { return LE; }
@@ -54,6 +53,6 @@ ID [-_0-9a-z]+
 {ID}    { yylval.string = (char *)malloc(strlen(yytext) + 1);
           strcpy(yylval.string, yytext);
           return REAL_VAR; }
-. { printf("?? %c\n", yytext[0]); }
+. { yyerror("unrecognised character"); }
 
 %%
