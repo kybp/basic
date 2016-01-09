@@ -10,5 +10,6 @@ typedef struct line {
 
 void add_line(line *listing, int line_no, char *text);
 void save_listing(line *listing, char *filename);
+void write_listing(line *listing, FILE *file);
 
 #endif

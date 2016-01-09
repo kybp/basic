@@ -40,7 +40,7 @@ void eval(void);
 
 %token ADD SUB MUL DIV EXPT
 %token GOSUB GOTO IF LET PRINT RETURN
-%token SAVE
+%token LIST SAVE
 %token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
 
@@ -66,6 +66,7 @@ line: /* nothing */
 
 statement: gosub_stmt
          | goto_stmt
+         | list_stmt
          | return_stmt
          | save_stmt
 ;
@@ -79,6 +80,11 @@ gosub_stmt: GOSUB INTEGER {
 goto_stmt: GOTO INTEGER {
     current_statement.command = GOTO;
     current_statement.arg1.integer = $2;
+ }
+;
+
+list_stmt: LIST {
+    current_statement.command = LIST;
  }
 ;
 
@@ -108,6 +114,8 @@ void eval() {
     case GOTO:
         current_line = current_statement.arg1.integer;
         break;
+    case LIST:
+        write_listing(&lst, stdout);
     case RETURN:
         current_line = pop(&st);
         break;

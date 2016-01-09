@@ -32,6 +32,7 @@ ID [-_0-9a-z]+
 "rem"[^\n]*      { /* ignore comments */ }
 "return"         { return RETURN; }
 
+"list"           { return LIST; }
 "save"           { return SAVE; }
 
 "<"              { return LT; }
