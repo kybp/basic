@@ -1,8 +1,10 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "listing.h"
 
 void add_line_from_parent(line *parent, line *l, int line_no, char *text);
+void write_listing(line *listing, FILE *file);
 
 void add_line(line *listing, int line_no, char *text)
 {
@@ -35,4 +37,25 @@ void add_line_from_parent(line *parent, line *l, int line_no, char *text)
     } else {
         add_line_from_parent(l, l->left, line_no, text);
     }
+}
+
+void save_listing(line *listing, char *filename)
+{
+    FILE *f;
+
+    if ((f = fopen(filename, "w")) == NULL) {
+        /* handle error */
+    } else {
+        write_listing(listing, f);
+    }
+}
+
+void write_listing(line *listing, FILE *file)
+{
+    if (listing == NULL) return;
+
+    write_listing(listing->left, file);
+    if (listing->text)
+        fprintf(file, "%d %s\n", listing->line_no, listing->text);
+    write_listing(listing->right, file);
 }

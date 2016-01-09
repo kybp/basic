@@ -1,11 +1,18 @@
 %{
+#include <ctype.h>
 #include <stdio.h>
+#include <string.h>
+#include "listing.h"
 #include "stack.h"
 
-void yyerror (char const *s) 
+#define MAX_LINE 1024
+
+void yyerror(char const *s) 
 {
     fprintf(stderr, "%s\n", s);
 }
+
+void drop_number(char *from, char *to);
 
 union argument {
     int integer;
@@ -14,6 +21,7 @@ union argument {
 
 static int current_line;
 static stack st;
+static line lst;
 
 struct {
     int command;
@@ -32,9 +40,11 @@ void eval(void);
 
 %token ADD SUB MUL DIV EXPT
 %token GOSUB GOTO IF LET PRINT RETURN
+%token SAVE
 %token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
 
+%token <string>  PROG_LINE
 %token <integer> INTEGER
 %token <real>    REAL
 %token <string>  STRING
@@ -45,13 +55,19 @@ void eval(void);
 %%
 
 line: /* nothing */
-| line INTEGER statement EOL
+| line STRING EOL { puts($2); }
+| line PROG_LINE EOL {
+    char buf[MAX_LINE];
+    drop_number($2, buf);
+    add_line(&lst, atoi($2), buf);
+ }
 | line statement EOL { eval(); }
 ;
 
 statement: gosub_stmt
          | goto_stmt
          | return_stmt
+         | save_stmt
 ;
 
 gosub_stmt: GOSUB INTEGER {
@@ -68,6 +84,12 @@ goto_stmt: GOTO INTEGER {
 
 return_stmt: RETURN {
     current_statement.command = RETURN;
+ }
+;
+
+save_stmt: SAVE STRING {
+    current_statement.command = SAVE;
+    current_statement.arg1.string = $2;
  }
 ;
 
@@ -88,5 +110,16 @@ void eval() {
         break;
     case RETURN:
         current_line = pop(&st);
+        break;
+    case SAVE:
+        save_listing(&lst, current_statement.arg1.string);
+        break;
     }
+}
+
+void drop_number(char *from, char *to)
+{
+    while (isdigit(*from++))
+        ; /* first non-digit is a space */
+    strcpy(to, from);
 }
