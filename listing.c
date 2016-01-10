@@ -3,22 +3,28 @@
 #include <string.h>
 #include "listing.h"
 
-void add_line_from_parent(line *parent, line *l, int line_no, char *text);
+void add_line_from_parent(line *parent, line *l, int line_no,
+                          char *text, statement *stmt);
+void stmtcopy(statement *to, statement *from);
 void write_listing(line *listing, FILE *file);
 
-void add_line(line *listing, int line_no, char *text)
+void add_line(line *listing, int line_no, char *text, statement *stmt)
 {
-    add_line_from_parent(listing, listing, line_no, text);
+    add_line_from_parent(listing, listing, line_no, text, stmt);
 }
 
-void add_line_from_parent(line *parent, line *l, int line_no, char *text)
+void add_line_from_parent(line *parent, line *l, int line_no,
+                          char *text, statement *stmt)
 {
     if (l == NULL) {
-        char *copy = (char *)malloc(strlen(text) + 1);
-        strcpy(copy, text);
-        line *new = (line *)malloc(sizeof(line));
+        statement *stmt_copy = (statement *)malloc(sizeof(statement));
+        char *text_copy = (char *)malloc(strlen(text) + 1);
+        line *new  = (line *)malloc(sizeof(line));
+        strcpy(text_copy, text);
+        stmtcopy(stmt_copy, stmt);
         new->line_no = line_no;
-        new->text    = copy;
+        new->stmt    = stmt_copy;
+        new->text    = text_copy;
         new->left    = NULL;
         new->right   = NULL;
         l = new;
@@ -33,9 +39,9 @@ void add_line_from_parent(line *parent, line *l, int line_no, char *text)
         free(l->text);
         l->text = copy;
     } else if (l->line_no < line_no) {
-        add_line_from_parent(l, l->right, line_no, text);
+        add_line_from_parent(l, l->right, line_no, text, stmt);
     } else {
-        add_line_from_parent(l, l->left, line_no, text);
+        add_line_from_parent(l, l->left, line_no, text, stmt);
     }
 }
 
@@ -49,6 +55,7 @@ void reset_listing(line *listing)
      * do not allocate */
     if (listing->text) {
         free(listing->text);
+        free(listing->stmt);
         free(listing);
     } else {
         listing->left = NULL;
@@ -66,6 +73,13 @@ void save_listing(line *listing, char *filename)
         write_listing(listing, f);
         fclose(f);
     }
+}
+
+void stmtcopy(statement *to, statement *from)
+{
+    to->command = from->command;
+    to->arg1    = from->arg1;
+    to->arg2    = from->arg2;
 }
 
 void write_listing(line *listing, FILE *file)

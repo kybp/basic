@@ -18,22 +18,13 @@ void yyerror(char const *s)
 
 void drop_number(char *from, char *to);
 
-union argument {
-    int integer;
-    char *string;
-};
-
 static FILE *old_yyin = NULL;
 
 static int current_line;
 static stack st;
 static line lst;
 
-struct {
-    int command;
-    union argument arg1;
-    union argument arg2;
-} current_statement;
+statement current_statement;
 
 void eval(void);
 %}
@@ -64,7 +55,7 @@ line: /* nothing */
 | line PROG_LINE EOL {
     char buf[MAX_LINE];
     drop_number($2, buf);
-    add_line(&lst, atoi($2), buf);
+    add_line(&lst, atoi($2), buf, &current_statement);
  }
 | line statement EOL { eval(); }
 ;
@@ -102,7 +93,7 @@ load_stmt: LOAD STRING {
 ;
 
 new_stmt: NEW {
-    reset_listing(&lst);
+    current_statement.command = NEW;
  }
 ;
 
@@ -151,6 +142,9 @@ void eval() {
         reset_listing(&lst);
         old_yyin = yyin;
         yyin = fopen(current_statement.arg1.string, "r");
+        break;
+    case NEW:
+        reset_listing(&lst);
         break;
     case RETURN:
         current_line = pop(&st);
