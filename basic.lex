@@ -22,7 +22,7 @@ ID [-_0-9a-z]+
 "-"              { return SUB;  }
 "*"              { return MUL;  }
 "/"              { return DIV;  }
-"^"              { return EXPT; }
+"**"             { return EXPT; }
 
 "real"           { return REAL_CAST; }
 "round"          { return ROUND;     }
