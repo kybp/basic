@@ -6,6 +6,7 @@
 #include <string.h>
 #include "listing.h"
 #include "stack.h"
+#include "symtab.h"
 
 #define MAX_LINE 1024
 
@@ -19,8 +20,10 @@ void yyerror(char const *s)
 
 static FILE *old_yyin = NULL;
 
+static identifier current_id;
 static line lst;
 static statement current_statement;
+static symtab sym;
 
 %}
 
@@ -41,7 +44,9 @@ static statement current_statement;
 %right EXPT
 
 %type <integer> int_expr
-%type <real> real_expr
+%type <real>    real_expr
+%type <string>  str_expr
+
 %token <integer> INTEGER
 %token <real>    REAL
 %token <string>  STRING
@@ -64,16 +69,20 @@ command: list_stmt
        | new_stmt
        | run_stmt
        | save_stmt
-;
+       ;
 
 statement: gosub_stmt
          | goto_stmt
          | if_stmt
+         | let_stmt
          | print_stmt
          | return_stmt
-;
+         ;
+
+/* Expressions */
 
 int_expr: INTEGER
+        | INT_VAR { lookup_int($1, &sym, &$$); }
         | ROUND LPAREN REAL RPAREN { $$ = (int)($3 + 0.5); }
         | int_expr ADD int_expr { $$ = $1 + $3; }
         | int_expr SUB int_expr { $$ = $1 - $3; }
@@ -82,6 +91,7 @@ int_expr: INTEGER
         ;
 
 real_expr: REAL
+         | REAL_VAR { lookup_real($1, &sym, &$$); }
          | REAL_CAST LPAREN INTEGER RPAREN { $$ = (double)$3; }
          | real_expr ADD real_expr  { $$ = $1 + $3; }
          | real_expr SUB real_expr  { $$ = $1 - $3; }
@@ -89,6 +99,10 @@ real_expr: REAL
          | real_expr DIV real_expr  { $$ = $1 / $3; }
          | real_expr EXPT real_expr { $$ = pow($1, $3); }
          ;
+
+str_expr: STRING
+        | STR_VAR { lookup_str($1, &sym, &$$); }
+        ;
 
 /* Commands */
 
@@ -140,12 +154,32 @@ if_stmt: IF int_expr GOTO INTEGER {
  }
 ;
 
+let_stmt: LET INT_VAR EQ int_expr {
+    current_id.name = $2;
+    current_id.type = INTEGER;
+    current_id.value.integer = $4;
+    defvar(&current_id, &sym);
+ }
+| LET REAL_VAR EQ real_expr {
+    current_id.name = $2;
+    current_id.type = REAL;
+    current_id.value.real = $4;
+    defvar(&current_id, &sym);
+ }
+| LET STR_VAR EQ str_expr {
+    current_id.name = $2;
+    current_id.type = STRING;
+    current_id.value.string = $4;
+    defvar(&current_id, &sym);
+ }
+;
+
 print_stmt: PRINT int_expr {
     current_statement.command = PRINT;
     current_statement.type = INTEGER;
     current_statement.arg1.integer = $2;
  }
-| PRINT STRING {
+| PRINT str_expr {
     current_statement.command = PRINT;
     current_statement.type = STRING;
     current_statement.arg1.string = $2;

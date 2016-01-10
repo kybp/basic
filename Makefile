@@ -1,7 +1,8 @@
 CFLAGS = -g -Wall -Wextra -std=c89
 
-basic: stack.o listing.o basic.tab.h lex.yy.c
-	cc $(CFLAGS) -o basic basic.tab.c lex.yy.c stack.o listing.o -ll
+basic: symtab.o stack.o listing.o basic.tab.h lex.yy.c
+	cc $(CFLAGS) -o basic basic.tab.c lex.yy.c \
+		stack.o listing.o symtab.o -ll
 
 lex.yy.c: basic.lex basic.tab.h
 	flex -i basic.lex
@@ -14,6 +15,9 @@ stack.o: stack.c stack.h
 
 listing.o: listing.c listing.h basic.tab.h
 	cc $(CFLAGS) -c listing.c
+
+symtab.o: symtab.c symtab.h
+	cc $(CFLAGS) -c symtab.c
 
 clean:
 	rm basic basic.tab.c basic.tab.h lex.yy.c stack.o listing.o
