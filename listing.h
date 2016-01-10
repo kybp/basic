@@ -1,5 +1,6 @@
 #ifndef LISTING_H
 #define LISTING_H
+#include "stack.h"
 
 union argument {
     int integer;
@@ -17,9 +18,12 @@ typedef struct line {
     statement *stmt;
     struct line *left;
     struct line *right;
+    struct line *parent;
 } line;
 
 void add_line(line *listing, int line_no, statement *stmt);
+void eval_listing(line *listing);
+int  eval_stmt(statement *stmt, stack *st);
 void reset_listing(line *listing);
 void save_listing(line *listing, char *filename);
 void write_listing(line *listing, FILE *file);

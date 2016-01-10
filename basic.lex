@@ -35,6 +35,7 @@ ID [-_0-9a-z]+
 "list"           { return LIST; }
 "load"           { return LOAD; }
 "new"            { return NEW;  }
+"run"            { return RUN;  }
 "save"           { return SAVE; }
 
 "<"              { return LT; }

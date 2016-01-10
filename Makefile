@@ -1,4 +1,4 @@
-CFLAGS = -g -Wall -std=c89
+CFLAGS = -g -Wall -Wextra -std=c89
 
 basic: stack.o listing.o basic.tab.h lex.yy.c
 	cc $(CFLAGS) -o basic basic.tab.c lex.yy.c stack.o listing.o -ll

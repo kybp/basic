@@ -16,17 +16,11 @@ void yyerror(char const *s)
     fprintf(stderr, "%s\n", s);
 }
 
-void drop_number(char *from, char *to);
-
 static FILE *old_yyin = NULL;
 
-static int current_line;
-static stack st;
 static line lst;
+static statement current_statement;
 
-statement current_statement;
-
-void eval(void);
 %}
 
 %union {
@@ -37,7 +31,7 @@ void eval(void);
 
 %token ADD SUB MUL DIV EXPT
 %token GOSUB GOTO IF LET PRINT RETURN
-%token LIST LOAD NEW SAVE
+%token LIST LOAD NEW RUN SAVE
 %token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
 
@@ -55,16 +49,20 @@ line: /* nothing */
 | line INTEGER statement EOL {
     add_line(&lst, $2, &current_statement);
  }
-| line statement EOL { eval(); }
+| line command   EOL { /* work is done in the command */ }
+| line statement EOL { eval_stmt(&current_statement, NULL); }
+;
+
+command: list_stmt
+       | load_stmt
+       | new_stmt
+       | run_stmt
+       | save_stmt
 ;
 
 statement: gosub_stmt
          | goto_stmt
-         | list_stmt
-         | load_stmt
-         | new_stmt
          | return_stmt
-         | save_stmt
 ;
 
 gosub_stmt: GOSUB INTEGER {
@@ -80,18 +78,19 @@ goto_stmt: GOTO INTEGER {
 ;
 
 list_stmt: LIST {
-    current_statement.command = LIST;
+    write_listing(&lst, stdout);
  }
 ;
 
 load_stmt: LOAD STRING {
-    current_statement.command = LOAD;
-    current_statement.arg1.string = $2;
+    reset_listing(&lst);
+    old_yyin = yyin;
+    yyin = fopen($2, "r");
  }
 ;
 
 new_stmt: NEW {
-    current_statement.command = NEW;
+    reset_listing(&lst);
  }
 ;
 
@@ -100,9 +99,13 @@ return_stmt: RETURN {
  }
 ;
 
+run_stmt: RUN {
+    eval_listing(&lst);
+ }
+;
+
 save_stmt: SAVE STRING {
-    current_statement.command = SAVE;
-    current_statement.arg1.string = $2;
+    save_listing(&lst, $2);
  }
 ;
 
@@ -122,40 +125,5 @@ int yywrap(void)
 
 int main(void)
 {
-    init_stack(&st, 16);
     yyparse();
-}
-
-void eval() {
-    switch(current_statement.command) {
-    case GOSUB:
-        push(&st, current_line);
-    case GOTO:
-        current_line = current_statement.arg1.integer;
-        break;
-    case LIST:
-        write_listing(&lst, stdout);
-        break;
-    case LOAD:
-        reset_listing(&lst);
-        old_yyin = yyin;
-        yyin = fopen(current_statement.arg1.string, "r");
-        break;
-    case NEW:
-        reset_listing(&lst);
-        break;
-    case RETURN:
-        current_line = pop(&st);
-        break;
-    case SAVE:
-        save_listing(&lst, current_statement.arg1.string);
-        break;
-    }
-}
-
-void drop_number(char *from, char *to)
-{
-    while (isdigit(*from++))
-        ; /* first non-digit is a space */
-    strcpy(to, from);
 }
