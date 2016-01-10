@@ -52,10 +52,8 @@ void eval(void);
 %%
 
 line: /* nothing */
-| line PROG_LINE EOL {
-    char buf[MAX_LINE];
-    drop_number($2, buf);
-    add_line(&lst, atoi($2), buf, &current_statement);
+| line INTEGER statement EOL {
+    add_line(&lst, $2, &current_statement);
  }
 | line statement EOL { eval(); }
 ;

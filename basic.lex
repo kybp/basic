@@ -11,9 +11,6 @@ ID [-_0-9a-z]+
 
 %%
 
-^[0-9]+" "[^\n]* { yylval.string = (char *)malloc(strlen(yytext) + 1);
-                   strcpy(yylval.string, yytext);
-                   return PROG_LINE; }
 \"[^\"]*\"       { yylval.string = (char *)malloc(strlen(yytext) - 1);
                    strncpy(yylval.string, yytext + 1, strlen(yytext) - 2);
                    return STRING; }

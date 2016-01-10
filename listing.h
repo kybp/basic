@@ -14,13 +14,12 @@ typedef struct statement {
 
 typedef struct line {
     int line_no;
-    char *text;
     statement *stmt;
     struct line *left;
     struct line *right;
 } line;
 
-void add_line(line *listing, int line_no, char *text, statement *stmt);
+void add_line(line *listing, int line_no, statement *stmt);
 void reset_listing(line *listing);
 void save_listing(line *listing, char *filename);
 void write_listing(line *listing, FILE *file);

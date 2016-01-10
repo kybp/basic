@@ -12,7 +12,7 @@ basic.tab.h: basic.y
 stack.o: stack.c stack.h
 	cc $(CFLAGS) -c stack.c
 
-listing.o: listing.c listing.h
+listing.o: listing.c listing.h basic.tab.h
 	cc $(CFLAGS) -c listing.c
 
 clean:
