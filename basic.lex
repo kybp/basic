@@ -3,6 +3,7 @@
 #include <string.h>
 #include "basic.tab.h"
 
+int fileno(FILE *f);
 void yyerror(char const *s);
 
 %}

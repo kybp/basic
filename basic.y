@@ -126,4 +126,5 @@ int yywrap(void)
 int main(void)
 {
     yyparse();
+    return 0;
 }
