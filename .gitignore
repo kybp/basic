@@ -4,3 +4,4 @@ basic.tab.c
 basic.tab.h
 lex.yy.c
 basic
+basic.dSYM/
