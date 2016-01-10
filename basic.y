@@ -68,6 +68,7 @@ command: list_stmt
 
 statement: gosub_stmt
          | goto_stmt
+         | if_stmt
          | print_stmt
          | return_stmt
 ;
@@ -129,6 +130,13 @@ gosub_stmt: GOSUB INTEGER {
 goto_stmt: GOTO INTEGER {
     current_statement.command = GOTO;
     current_statement.arg1.integer = $2;
+ }
+;
+
+if_stmt: IF int_expr GOTO INTEGER {
+    current_statement.command = IF;
+    current_statement.arg1.integer = $2;
+    current_statement.arg2.integer = $4;
  }
 ;
 

@@ -81,7 +81,8 @@ void eval_listing(line *listing)
 
 /*
  * eval_stmt() returns the next line number to execute at. Return
- * NEXT_LINE to progress to the next line, or 0 to stop execution
+ * NEXT_LINE to progress to the next line, or NOTHING to stop
+ * execution
  */
 int eval_stmt(statement *stmt, stack *st) {
     /* If the stack is NULL that means we're running interactively, so
@@ -92,6 +93,9 @@ int eval_stmt(statement *stmt, stack *st) {
         push(st, stmt->arg1.integer);
     case GOTO:
         return stmt->arg1.integer;
+    case IF:
+        if (stmt->arg1.integer) return stmt->arg2.integer;
+        break;
     case PRINT:
         switch (stmt->type) {
         case STRING:
@@ -181,6 +185,10 @@ void write_stmt(statement *stmt, FILE *f) {
         break;
     case GOTO:
         fprintf(f, "GOTO %d\n", stmt->arg1.integer);
+        break;
+    case IF:
+        fprintf(f, "IF %d GOTO %d\n",
+                stmt->arg1.integer, stmt->arg2.integer);
         break;
     case PRINT:
         switch (stmt->type) {
