@@ -95,6 +95,22 @@ int eval_stmt(statement *stmt, stack *st) {
         push(st, stmt->arg1.integer);
     case GOTO:
         return stmt->arg1.integer;
+    case PRINT:
+        switch (stmt->type) {
+        case STRING:
+            printf("%s\n", stmt->arg1.string);
+            break;
+        case INTEGER:
+            printf("%d\n", stmt->arg1.integer);
+            break;
+        case REAL:
+            printf("%f\n", stmt->arg1.real);
+            break;
+        case NOTHING:
+            printf("\n");
+            break;
+        }
+        break;
     case RETURN:
         if (stack_is_empty(st)) return 0;
         return pop(st);
@@ -153,6 +169,7 @@ void save_listing(line *listing, char *filename)
 void stmtcopy(statement *to, statement *from)
 {
     to->command = from->command;
+    to->type    = from->type;
     to->arg1    = from->arg1;
     to->arg2    = from->arg2;
 }
@@ -165,23 +182,25 @@ void write_stmt(statement *stmt, FILE *f) {
     case GOTO:
         fprintf(f, "GOTO %d\n", stmt->arg1.integer);
         break;
-    case LIST:
-        fprintf(f, "LIST\n");
-        break;
-    case LOAD:
-        fprintf(f, "LOAD\n");
-        break;
-    case NEW:
-        fprintf(f, "NEW\n");
+    case PRINT:
+        switch (stmt->type) {
+        case STRING:
+            fprintf(f, "PRINT \"%s\"\n", stmt->arg1.string);
+            break;
+        case INTEGER:
+            fprintf(f, "PRINT %d\n", stmt->arg1.integer);
+            break;
+        case REAL:
+            fprintf(f, "PRINT %f\n", stmt->arg1.real);
+            break;
+        case NOTHING:
+            fprintf(f, "PRINT\n");
+            break;
+        }
         break;
     case RETURN:
         fprintf(f, "RETURN\n");
         break;
-    case SAVE:
-        fprintf(f, "SAVE\n");
-        break;
-    default:
-        fprintf(f, "???\n");
     }
 }
 

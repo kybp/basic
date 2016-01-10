@@ -2,13 +2,17 @@
 #define LISTING_H
 #include "stack.h"
 
+#define NOTHING 0
+
 union argument {
     int integer;
+    double real;
     char *string;
 };
 
 typedef struct statement {
     int command;
+    int type;
     union argument arg1;
     union argument arg2;
 } statement;

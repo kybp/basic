@@ -62,20 +62,11 @@ command: list_stmt
 
 statement: gosub_stmt
          | goto_stmt
+         | print_stmt
          | return_stmt
 ;
 
-gosub_stmt: GOSUB INTEGER {
-    current_statement.command = GOSUB;
-    current_statement.arg1.integer = $2;
- }
-;
-
-goto_stmt: GOTO INTEGER {
-    current_statement.command = GOTO;
-    current_statement.arg1.integer = $2;
- }
-;
+/* Commands */
 
 list_stmt: LIST {
     write_listing(&lst, stdout);
@@ -94,11 +85,6 @@ new_stmt: NEW {
  }
 ;
 
-return_stmt: RETURN {
-    current_statement.command = RETURN;
- }
-;
-
 run_stmt: RUN {
     eval_listing(&lst);
  }
@@ -106,6 +92,46 @@ run_stmt: RUN {
 
 save_stmt: SAVE STRING {
     save_listing(&lst, $2);
+ }
+;
+
+/* Statements */
+
+gosub_stmt: GOSUB INTEGER {
+    current_statement.command = GOSUB;
+    current_statement.arg1.integer = $2;
+ }
+;
+
+goto_stmt: GOTO INTEGER {
+    current_statement.command = GOTO;
+    current_statement.arg1.integer = $2;
+ }
+;
+
+print_stmt: PRINT INTEGER {
+    current_statement.command = PRINT;
+    current_statement.type = INTEGER;
+    current_statement.arg1.integer = $2;
+ }
+| PRINT STRING {
+    current_statement.command = PRINT;
+    current_statement.type = STRING;
+    current_statement.arg1.string = $2;
+ }
+| PRINT REAL {
+    current_statement.command = PRINT;
+    current_statement.type = REAL;
+    current_statement.arg1.real = $2;
+ }
+| PRINT {
+    current_statement.command = PRINT;
+    current_statement.type = NOTHING;
+  }
+;
+
+return_stmt: RETURN {
+    current_statement.command = RETURN;
  }
 ;
 
