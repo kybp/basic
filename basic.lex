@@ -24,6 +24,9 @@ ID [-_0-9a-z]+
 "/"              { return DIV;  }
 "^"              { return EXPT; }
 
+"real"           { return REAL_CAST; }
+"round"          { return ROUND;     }
+
 "gosub"          { return GOSUB;  }
 "goto"           { return GOTO;   }
 "if"             { return IF;     }

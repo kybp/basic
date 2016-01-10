@@ -1,5 +1,6 @@
 %{
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,13 +30,18 @@ static statement current_statement;
     char *string;
 }
 
-%token ADD SUB MUL DIV EXPT
+%token REAL_CAST ROUND
 %token GOSUB GOTO IF LET PRINT RETURN
 %token LIST LOAD NEW RUN SAVE
 %token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
 
-%token <string>  PROG_LINE
+%left ADD SUB
+%left MUL DIV
+%right EXPT
+
+%type <integer> int_expr
+%type <real> real_expr
 %token <integer> INTEGER
 %token <real>    REAL
 %token <string>  STRING
@@ -65,6 +71,23 @@ statement: gosub_stmt
          | print_stmt
          | return_stmt
 ;
+
+int_expr: INTEGER
+        | ROUND LPAREN REAL RPAREN { $$ = (int)($3 + 0.5); }
+        | int_expr ADD int_expr { $$ = $1 + $3; }
+        | int_expr SUB int_expr { $$ = $1 - $3; }
+        | int_expr MUL int_expr { $$ = $1 * $3; }
+        | int_expr DIV int_expr { $$ = $1 / $3; }
+        ;
+
+real_expr: REAL
+         | REAL_CAST LPAREN INTEGER RPAREN { $$ = (double)$3; }
+         | real_expr ADD real_expr  { $$ = $1 + $3; }
+         | real_expr SUB real_expr  { $$ = $1 - $3; }
+         | real_expr MUL real_expr  { $$ = $1 * $3; }
+         | real_expr DIV real_expr  { $$ = $1 / $3; }
+         | real_expr EXPT real_expr { $$ = pow($1, $3); }
+         ;
 
 /* Commands */
 
@@ -109,7 +132,7 @@ goto_stmt: GOTO INTEGER {
  }
 ;
 
-print_stmt: PRINT INTEGER {
+print_stmt: PRINT int_expr {
     current_statement.command = PRINT;
     current_statement.type = INTEGER;
     current_statement.arg1.integer = $2;
@@ -119,7 +142,7 @@ print_stmt: PRINT INTEGER {
     current_statement.type = STRING;
     current_statement.arg1.string = $2;
  }
-| PRINT REAL {
+| PRINT real_expr {
     current_statement.command = PRINT;
     current_statement.type = REAL;
     current_statement.arg1.real = $2;

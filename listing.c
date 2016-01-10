@@ -5,9 +5,6 @@
 #include "listing.h"
 #include "stack.h"
 
-#define MAX_LINE 1024
-#define NEXT_LINE -1
-
 void add_line_from_parent(line *parent, line *l, int line_no, statement *stmt);
 line *find_line(line *listing, int line_no);
 line *find_min(line *listing);
@@ -112,8 +109,11 @@ int eval_stmt(statement *stmt, stack *st) {
         }
         break;
     case RETURN:
-        if (stack_is_empty(st)) return 0;
-        return pop(st);
+        if (stack_is_empty(st)) {
+            return NOTHING;
+        } else {
+            return pop(st);
+        }
         break;
     }
     return NEXT_LINE;

@@ -3,6 +3,7 @@
 #include "stack.h"
 
 #define NOTHING 0
+#define NEXT_LINE -1
 
 union argument {
     int integer;
