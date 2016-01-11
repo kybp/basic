@@ -4,11 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "expr.h"
 #include "listing.h"
 #include "stack.h"
 #include "symtab.h"
-
-#define MAX_LINE 1024
 
 extern FILE *yyin;
 int yylex(void);
@@ -20,7 +19,6 @@ void yyerror(char const *s)
 
 static FILE *old_yyin = NULL;
 
-static identifier current_id;
 static line lst;
 static statement current_statement;
 static symtab sym;
@@ -31,6 +29,7 @@ static symtab sym;
     int integer;
     double real;
     char *string;
+    struct expr *expr;
 }
 
 %token REAL_CAST ROUND
@@ -43,9 +42,9 @@ static symtab sym;
 %left MUL DIV
 %right EXPT
 
-%type <integer> int_expr
-%type <real>    real_expr
-%type <string>  str_expr
+%type <expr> int_expr
+%type <expr> real_expr
+%type <expr> str_expr
 
 %token <integer> INTEGER
 %token <real>    REAL
@@ -61,7 +60,7 @@ line: /* nothing */
     add_line(&lst, $2, &current_statement);
  }
 | line command   EOL { /* work is done in the command */ }
-| line statement EOL { eval_stmt(&current_statement, NULL); }
+| line statement EOL { eval_stmt(&current_statement, NULL, &sym); }
 ;
 
 command: list_stmt
@@ -81,27 +80,16 @@ statement: gosub_stmt
 
 /* Expressions */
 
-int_expr: INTEGER
-        | INT_VAR { lookup_int($1, &sym, &$$); }
-        | ROUND LPAREN REAL RPAREN { $$ = (int)($3 + 0.5); }
-        | int_expr ADD int_expr { $$ = $1 + $3; }
-        | int_expr SUB int_expr { $$ = $1 - $3; }
-        | int_expr MUL int_expr { $$ = $1 * $3; }
-        | int_expr DIV int_expr { $$ = $1 / $3; }
+int_expr: INTEGER { $$ = new_int_expr($1); }
+        | INT_VAR { $$ = new_var_expr(INT_VAR, $1); }
         ;
 
-real_expr: REAL
-         | REAL_VAR { lookup_real($1, &sym, &$$); }
-         | REAL_CAST LPAREN INTEGER RPAREN { $$ = (double)$3; }
-         | real_expr ADD real_expr  { $$ = $1 + $3; }
-         | real_expr SUB real_expr  { $$ = $1 - $3; }
-         | real_expr MUL real_expr  { $$ = $1 * $3; }
-         | real_expr DIV real_expr  { $$ = $1 / $3; }
-         | real_expr EXPT real_expr { $$ = pow($1, $3); }
+real_expr: REAL     { $$ = new_real_expr($1); }
+         | REAL_VAR { $$ = new_var_expr(REAL_VAR, $1); }
          ;
 
-str_expr: STRING
-        | STR_VAR { lookup_str($1, &sym, &$$); }
+str_expr: STRING  { $$ = new_str_expr($1); }
+        | STR_VAR { $$ = new_var_expr(STR_VAR, $1); }
         ;
 
 /* Commands */
@@ -124,7 +112,7 @@ new_stmt: NEW {
 ;
 
 run_stmt: RUN {
-    eval_listing(&lst);
+    eval_listing(&lst, &sym);
  }
 ;
 
@@ -137,61 +125,55 @@ save_stmt: SAVE STRING {
 
 gosub_stmt: GOSUB INTEGER {
     current_statement.command = GOSUB;
-    current_statement.arg1.integer = $2;
+    current_statement.arg1 = new_int_expr($2);
  }
 ;
 
 goto_stmt: GOTO INTEGER {
     current_statement.command = GOTO;
-    current_statement.arg1.integer = $2;
+    current_statement.arg1 = new_int_expr($2);
  }
 ;
 
 if_stmt: IF int_expr GOTO INTEGER {
     current_statement.command = IF;
-    current_statement.arg1.integer = $2;
-    current_statement.arg2.integer = $4;
+    current_statement.arg1 = $2;
+    current_statement.arg2 = new_int_expr($4);
  }
 ;
 
 let_stmt: LET INT_VAR EQ int_expr {
-    current_id.name = $2;
-    current_id.type = INTEGER;
-    current_id.value.integer = $4;
-    defvar(&current_id, &sym);
+    current_statement.command = LET;
+    current_statement.arg1 = new_var_expr(INTEGER, $2);
+    current_statement.arg2 = $4;
  }
 | LET REAL_VAR EQ real_expr {
-    current_id.name = $2;
-    current_id.type = REAL;
-    current_id.value.real = $4;
-    defvar(&current_id, &sym);
+    current_statement.command = LET;
+    current_statement.arg1 = new_var_expr(REAL, $2);
+    current_statement.arg2 = $4;
  }
 | LET STR_VAR EQ str_expr {
-    current_id.name = $2;
-    current_id.type = STRING;
-    current_id.value.string = $4;
-    defvar(&current_id, &sym);
+    current_statement.command = LET;
+    current_statement.arg1 = new_var_expr(STRING, $2);
+    current_statement.arg2 = $4;
  }
 ;
 
 print_stmt: PRINT int_expr {
     current_statement.command = PRINT;
-    current_statement.type = INTEGER;
-    current_statement.arg1.integer = $2;
+    current_statement.arg1 = $2;
  }
 | PRINT str_expr {
     current_statement.command = PRINT;
-    current_statement.type = STRING;
-    current_statement.arg1.string = $2;
+    current_statement.arg1 = $2;
  }
 | PRINT real_expr {
     current_statement.command = PRINT;
-    current_statement.type = REAL;
-    current_statement.arg1.real = $2;
+    current_statement.arg1 = $2;
  }
 | PRINT {
     current_statement.command = PRINT;
-    current_statement.type = NOTHING;
+    current_statement.arg1 = NULL;
   }
 ;
 

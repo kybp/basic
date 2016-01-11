@@ -1,0 +1,26 @@
+#ifndef EXPR_H
+#define EXPR_H
+
+#include <stdio.h>
+#include "symtab.h"
+
+typedef struct expr {
+    int op;
+    int type;
+    union {
+        int integer;
+        double real;
+        char *string;
+    } val;
+    struct expr *arg1;
+    struct expr *arg2;
+} expr;
+
+void eval(expr *e, symtab *table);
+expr *new_int_expr(int n);
+expr *new_real_expr(double n);
+expr *new_str_expr(char *s);
+expr *new_var_expr(int type, char *name);
+void write_expr(FILE *f, expr *e);
+
+#endif

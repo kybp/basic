@@ -4,11 +4,7 @@
 typedef struct identifier {
     char *name;
     int type;
-    union {
-        int integer;
-        double real;
-        char *string;
-    } value;
+    void *data;
 } identifier;
 
 typedef struct symtab {
@@ -18,7 +14,7 @@ typedef struct symtab {
     struct symtab *parent;
 } symtab;
 
-void defvar(identifier *id, symtab *table);
+void defvar(char *name, int type, void *data, symtab *table);
 int lookup_int(char *name, symtab *table, int *n);
 int lookup_real(char *name, symtab *table, double *n);
 int lookup_str(char *name, symtab *table, char **s);

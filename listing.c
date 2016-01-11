@@ -4,6 +4,7 @@
 #include "basic.tab.h"
 #include "listing.h"
 #include "stack.h"
+#include "symtab.h"
 
 void add_line_from_parent(line *parent, line *l, int line_no, statement *stmt);
 line *find_line(line *listing, int line_no);
@@ -45,7 +46,7 @@ void add_line_from_parent(line *parent, line *l, int line_no, statement *stmt)
     }
 }
 
-void eval_listing(line *listing)
+void eval_listing(line *listing, symtab *table)
 {
     stack st;
     line *root = listing;
@@ -57,7 +58,7 @@ void eval_listing(line *listing)
     }
 
     while (listing) {
-        int next = eval_stmt(listing->stmt, &st);
+        int next = eval_stmt(listing->stmt, &st, table);
 
         switch (next) {
         case 0: return;
@@ -84,33 +85,44 @@ void eval_listing(line *listing)
  * NEXT_LINE to progress to the next line, or NOTHING to stop
  * execution
  */
-int eval_stmt(statement *stmt, stack *st) {
+int eval_stmt(statement *stmt, stack *st, symtab *table) {
     /* If the stack is NULL that means we're running interactively, so
      * any commands that modify the stack should check for NULL and
      * refuse to run */
     switch(stmt->command) {
     case GOSUB:
-        push(st, stmt->arg1.integer);
+        push(st, stmt->arg1->val.integer);
     case GOTO:
-        return stmt->arg1.integer;
+        return stmt->arg1->val.integer;
     case IF:
-        if (stmt->arg1.integer) return stmt->arg2.integer;
+        eval(stmt->arg1, table);
+        if (stmt->arg1->val.integer) return stmt->arg2->val.integer;
         break;
-    case PRINT:
-        switch (stmt->type) {
-        case STRING:
-            printf("%s\n", stmt->arg1.string);
-            break;
-        case INTEGER:
-            printf("%d\n", stmt->arg1.integer);
-            break;
-        case REAL:
-            printf("%f\n", stmt->arg1.real);
-            break;
-        case NOTHING:
-            printf("\n");
+    case LET:
+        switch (stmt->arg2->type) {
+        case INTEGER: {
+            int *n = (int *)malloc(sizeof(int));
+            *n = stmt->arg2->val.integer;
+            defvar(stmt->arg1->val.string, INTEGER, (void *)n, table);
             break;
         }
+        case REAL: {
+            double *d = (double *)malloc(sizeof(double));
+            *d = stmt->arg2->val.real;
+            defvar(stmt->arg1->val.string, REAL, (void *)d, table);
+            break;
+        }
+        case STRING: {
+            char *s = (char *)malloc(strlen(stmt->arg2->val.string) + 1);
+            strcpy(s, stmt->arg2->val.string);
+            defvar(stmt->arg1->val.string, STRING, (void *)s, table);
+            break;
+        }
+        }
+        break;
+    case PRINT:
+        write_expr(stdout, stmt->arg1);
+        printf("\n");
         break;
     case RETURN:
         if (stack_is_empty(st)) {
@@ -173,7 +185,6 @@ void save_listing(line *listing, char *filename)
 void stmtcopy(statement *to, statement *from)
 {
     to->command = from->command;
-    to->type    = from->type;
     to->arg1    = from->arg1;
     to->arg2    = from->arg2;
 }
@@ -181,35 +192,30 @@ void stmtcopy(statement *to, statement *from)
 void write_stmt(statement *stmt, FILE *f) {
     switch (stmt->command) {
     case GOSUB:
-        fprintf(f, "GOSUB %d\n", stmt->arg1.integer);
+        fprintf(f, "GOSUB %d", stmt->arg1->val.integer);
         break;
     case GOTO:
-        fprintf(f, "GOTO %d\n", stmt->arg1.integer);
+        fprintf(f, "GOTO %d", stmt->arg1->val.integer);
         break;
     case IF:
-        fprintf(f, "IF %d GOTO %d\n",
-                stmt->arg1.integer, stmt->arg2.integer);
+        fprintf(f, "IF %d GOTO %d",
+                stmt->arg1->val.integer, stmt->arg2->val.integer);
+        break;
+    case LET:
+        fprintf(f, "LET %s = ", stmt->arg1->val.string);
+        write_expr(f, stmt->arg2);
         break;
     case PRINT:
-        switch (stmt->type) {
-        case STRING:
-            fprintf(f, "PRINT \"%s\"\n", stmt->arg1.string);
-            break;
-        case INTEGER:
-            fprintf(f, "PRINT %d\n", stmt->arg1.integer);
-            break;
-        case REAL:
-            fprintf(f, "PRINT %f\n", stmt->arg1.real);
-            break;
-        case NOTHING:
-            fprintf(f, "PRINT\n");
-            break;
-        }
+        fprintf(f, "PRINT ");
+        write_expr(f, stmt->arg1);
         break;
     case RETURN:
-        fprintf(f, "RETURN\n");
+        fprintf(f, "RETURN");
         break;
+    default:
+        fprintf(stderr, "can't write unrecognised command");
     }
+    fprintf(f, "\n");
 }
 
 void write_listing(line *listing, FILE *file)
