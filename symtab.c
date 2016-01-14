@@ -67,7 +67,7 @@ int lookup_str(char *name, symtab *table, char **s)
     if (id == NULL) {
         return 0;
     } else {
-        *s = *(char *)id->data;
+        *s = (char *)id->data;
         return 1;
     }
 }
@@ -76,7 +76,7 @@ identifier *lookup_val(char *name, symtab *table)
 {
     int comp;
 
-    if (table == NULL) return NULL;
+    if (table->val == NULL) return NULL;
 
     comp = strcmp(name, table->val->name);
     if (comp == 0) {

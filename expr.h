@@ -16,10 +16,10 @@ typedef struct expr {
     struct expr *arg2;
 } expr;
 
-void eval_expr(expr *e, symtab *table);
+void eval_expr(expr *in, expr *out, symtab *table);
 expr *new_expr(expr *arg1, int op, expr *arg2);
 expr *new_int_expr(int n);
-expr *new_real_expr(double n);
+expr *new_real_expr(double d);
 expr *new_str_expr(char *s);
 expr *new_var_expr(int type, char *name);
 void write_expr(FILE *f, expr *e);

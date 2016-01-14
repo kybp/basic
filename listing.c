@@ -85,6 +85,7 @@ void eval_listing(line *listing, symtab *table)
  * execution
  */
 int eval_stmt(statement *stmt, stack *st, symtab *table) {
+    expr out;
     /* If the stack is NULL that means we're running interactively, so
      * any commands that modify the stack should check for NULL and
      * refuse to run */
@@ -94,34 +95,35 @@ int eval_stmt(statement *stmt, stack *st, symtab *table) {
     case GOTO:
         return stmt->arg1->val.integer;
     case IF:
-        eval_expr(stmt->arg1, table);
-        if (stmt->arg1->val.integer) return stmt->arg2->val.integer;
+        eval_expr(stmt->arg1, &out, table);
+        if (out.val.integer) return stmt->arg2->val.integer;
         break;
     case LET:
-        switch (stmt->arg2->type) {
+        eval_expr(stmt->arg2, &out, table);
+        switch (out.type) {
         case INTEGER: {
             int *n = (int *)malloc(sizeof(int));
-            *n = stmt->arg2->val.integer;
+            *n = out.val.integer;
             defvar(stmt->arg1->val.string, INTEGER, (void *)n, table);
             break;
         }
         case REAL: {
             double *d = (double *)malloc(sizeof(double));
-            *d = stmt->arg2->val.real;
+            *d = out.val.real;
             defvar(stmt->arg1->val.string, REAL, (void *)d, table);
             break;
         }
         case STRING: {
             char *s = (char *)malloc(strlen(stmt->arg2->val.string) + 1);
-            strcpy(s, stmt->arg2->val.string);
+            strcpy(s, out.val.string);
             defvar(stmt->arg1->val.string, STRING, (void *)s, table);
             break;
         }
         }
         break;
     case PRINT:
-        eval_expr(stmt->arg1, table);
-        write_expr(stdout, stmt->arg1);
+        eval_expr(stmt->arg1, &out, table);
+        write_expr(stdout, &out);
         printf("\n");
         break;
     case RETURN:

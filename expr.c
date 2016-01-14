@@ -8,148 +8,170 @@
 #define MAX_LINE 1024
 #define NOTHING 0
 
-void add_expr(expr *e, symtab *table);
-void div_expr(expr *e, symtab *table);
-void mul_expr(expr *e, symtab *table);
-void pow_expr(expr *e, symtab *table);
-void sub_expr(expr *e, symtab *table);
+void add_expr(expr *in, expr *out, symtab *table);
+void div_expr(expr *in, expr *out, symtab *table);
+void free_rec(expr *e);
+void mul_expr(expr *in, expr *out, symtab *table);
+void pow_expr(expr *in, expr *out, symtab *table);
+void sub_expr(expr *in, expr *out, symtab *table);
 
-void add_expr(expr *e, symtab *table)
+void add_expr(expr *in, expr *out, symtab *table)
 {
-    eval_expr(e->arg1, table);
-    eval_expr(e->arg2, table);
-    e->op = NOTHING;
-    if (e->arg1->type == INTEGER && e->arg2->type == INTEGER) {
-        e->type = INTEGER;
-        e->val.integer = e->arg1->val.integer + e->arg2->val.integer;
-    } else if (e->arg1->type == INTEGER && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = (double)e->arg1->val.integer + e->arg2->val.real;
-    } else if (e->arg1->type == REAL && e->arg2->type == INTEGER) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real + (double)e->arg2->val.integer;
-    } else if (e->arg1->type == REAL && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real + e->arg2->val.real;
+    eval_expr(in->arg1, out->arg1, table);
+    eval_expr(in->arg2, out->arg2, table);
+    out->op = NOTHING;
+    if (out->arg1->type == INTEGER && out->arg2->type == INTEGER) {
+        out->type = INTEGER;
+        out->val.integer = out->arg1->val.integer + out->arg2->val.integer;
+    } else if (out->arg1->type == INTEGER && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = (double)out->arg1->val.integer + out->arg2->val.real;
+    } else if (out->arg1->type == REAL && out->arg2->type == INTEGER) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real + (double)out->arg2->val.integer;
+    } else if (out->arg1->type == REAL && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real + out->arg2->val.real;
     }
 }
 
-void div_expr(expr *e, symtab *table)
+void div_expr(expr *in, expr *out, symtab *table)
 {
-    eval_expr(e->arg1, table);
-    eval_expr(e->arg2, table);
-    e->op = NOTHING;
-    if (e->arg1->type == INTEGER && e->arg2->type == INTEGER) {
-        e->type = INTEGER;
-        e->val.integer = e->arg1->val.integer / e->arg2->val.integer;
-    } else if (e->arg1->type == INTEGER && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = (double)e->arg1->val.integer / e->arg2->val.real;
-    } else if (e->arg1->type == REAL && e->arg2->type == INTEGER) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real / (double)e->arg2->val.integer;
-    } else if (e->arg1->type == REAL && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real / e->arg2->val.real;
+    eval_expr(in->arg1, out->arg1, table);
+    eval_expr(in->arg2, out->arg2, table);
+    out->op = NOTHING;
+    if (out->arg1->type == INTEGER && out->arg2->type == INTEGER) {
+        out->type = INTEGER;
+        out->val.integer = out->arg1->val.integer / out->arg2->val.integer;
+    } else if (out->arg1->type == INTEGER && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = (double)out->arg1->val.integer / out->arg2->val.real;
+    } else if (out->arg1->type == REAL && out->arg2->type == INTEGER) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real / (double)out->arg2->val.integer;
+    } else if (out->arg1->type == REAL && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real / out->arg2->val.real;
     }
 }
 
-void eval_expr(expr *e, symtab *table)
+void eval_expr(expr *in, expr *out, symtab *table)
 {
-    switch (e->type) {
+    switch (in->type) {
     case NOTHING: break;
     case INTEGER: case REAL: case STRING:
+        out->type = in->type;
+        out->val  = in->val;
+        free_rec(out->arg1);
+        free_rec(out->arg2);
         return;
     case INT_VAR: {
         int n;
-        if (lookup_int(e->val.string, table, &n)) {
-            e->type = INTEGER;
-            e->val.integer = n;
+        if (lookup_int(in->val.string, table, &n)) {
+            out->type = INTEGER;
+            out->val.integer = n;
+            free_rec(out->arg1);
+            free_rec(out->arg2);
             return;
         } else {
             fprintf(stderr, "undefined integer variable '%s'\n",
-                    e->val.string);
+                    in->val.string);
             exit(1);
         }
     } break;
     case REAL_VAR: {
         double d;
-        if (lookup_real(e->val.string, table, &d)) {
-            e->type = REAL;
-            e->val.real = d;
+        if (lookup_real(in->val.string, table, &d)) {
+            out->type = REAL;
+            out->val.real = d;
+            free_rec(out->arg1);
+            free_rec(out->arg2);
             return;
         } else {
             fprintf(stderr, "undefined real variable '%s'\n",
-                    e->val.string);
+                    in->val.string);
             exit(1);
         }
     } break;
     case STR_VAR: {             /* segfaults */
         char *s = (char *)malloc(MAX_LINE);
-        if (lookup_str(e->val.string, table, &s)) {
-            e->type = STRING;
-            e->val.string = s;
+        if (lookup_str(in->val.string, table, &s)) {
+            out->type = STRING;
+            out->val.string = s;
+            free_rec(out->arg1);
+            free_rec(out->arg2);
             return;
         } else {
             fprintf(stderr, "undefined string variable '%s'\n",
-                    e->val.string);
+                    in->val.string);
             exit(1);
         }
     } break;
     }
 
-    switch (e->op) {
+    switch (in->op) {
     case NOTHING:
         fprintf(stderr, "No operation for non-constant expression\n");
         exit(1);
     case ADD:
-        add_expr(e, table);
+        add_expr(in, out, table);
         break;
     case SUB:
-        sub_expr(e, table);
+        sub_expr(in, out, table);
         break;
     case EXPT:
-        pow_expr(e, table);
+        pow_expr(in, out, table);
         break;
     case MUL:
-        mul_expr(e, table);
+        mul_expr(in, out, table);
         break;
     case DIV:
-        div_expr(e, table);
+        div_expr(in, out, table);
         break;
     default:
         fprintf(stderr, "unrecognised operation\n");
         exit(1);
     }
+    free_rec(out->arg1);
+    free_rec(out->arg2);
 }
 
-void mul_expr(expr *e, symtab *table)
+void free_rec(expr *e)
 {
-    eval_expr(e->arg1, table);
-    eval_expr(e->arg2, table);
-    e->op = NOTHING;
-    if (e->arg1->type == INTEGER && e->arg2->type == INTEGER) {
-        e->type = INTEGER;
-        e->val.integer = e->arg1->val.integer * e->arg2->val.integer;
-    } else if (e->arg1->type == INTEGER && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = (double)e->arg1->val.integer * e->arg2->val.real;
-    } else if (e->arg1->type == REAL && e->arg2->type == INTEGER) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real * (double)e->arg2->val.integer;
-    } else if (e->arg1->type == REAL && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real * e->arg2->val.real;
+    if (e) {
+        if (e->arg1) free_rec(e->arg1);
+        if (e->arg2) free_rec(e->arg2);
+        free(e);
     }
 }
 
-void pow_expr(expr *e, symtab *table)
+void mul_expr(expr *in, expr *out, symtab *table)
 {
-    eval_expr(e->arg1, table);
-    eval_expr(e->arg2, table);
-    e->op = NOTHING;
-    e->type = REAL;
-    e->val.real = pow(e->arg1->val.real, e->arg2->val.real);
+    eval_expr(in->arg1, out->arg1, table);
+    eval_expr(in->arg2, out->arg2, table);
+    out->op = NOTHING;
+    if (out->arg1->type == INTEGER && out->arg2->type == INTEGER) {
+        out->type = INTEGER;
+        out->val.integer = out->arg1->val.integer * out->arg2->val.integer;
+    } else if (out->arg1->type == INTEGER && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = (double)out->arg1->val.integer * out->arg2->val.real;
+    } else if (out->arg1->type == REAL && out->arg2->type == INTEGER) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real * (double)out->arg2->val.integer;
+    } else if (out->arg1->type == REAL && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real * out->arg2->val.real;
+    }
+}
+
+void pow_expr(expr *in, expr *out, symtab *table)
+{
+    eval_expr(in->arg1, out->arg2, table);
+    eval_expr(in->arg2, out->arg2, table);
+    out->op = NOTHING;
+    out->type = REAL;
+    out->val.real = pow(out->arg1->val.real, out->arg2->val.real);
 }
 
 expr *new_expr(expr *arg1, int op, expr *arg2)
@@ -170,11 +192,11 @@ expr *new_int_expr(int n)
     return e;
 }
 
-expr *new_real_expr(double n)
+expr *new_real_expr(double d)
 {
     expr *e = (expr *)malloc(sizeof(expr));
     e->type = REAL;
-    e->val.real = n;
+    e->val.real = d;
     return e;
 }
 
@@ -198,24 +220,24 @@ expr *new_var_expr(int type, char *name)
     return e;
 }
 
-void sub_expr(expr *e, symtab *table)
+void sub_expr(expr *in, expr *out, symtab *table)
 {
-    eval_expr(e->arg1, table);
-    eval_expr(e->arg2, table);
-    e->op = NOTHING;
-    if (e->arg1->type == INTEGER && e->arg2->type == INTEGER) {
-        e->type = INTEGER;
-        e->val.integer = e->arg1->val.integer - e->arg2->val.integer;
-    } else if (e->arg1->type == INTEGER && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = (double)e->arg1->val.integer - e->arg2->val.real;
-    } else if (e->arg1->type == REAL && e->arg2->type == INTEGER) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real - (double)e->arg2->val.integer;
-    } else if (e->arg1->type == REAL && e->arg2->type == REAL) {
-        e->type = REAL;
-        e->val.real = e->arg1->val.real - e->arg2->val.real;
+    eval_expr(in->arg1, out->arg1, table);
+    eval_expr(in->arg2, out->arg2, table);
+    if (out->arg1->type == INTEGER && out->arg2->type == INTEGER) {
+        out->type = INTEGER;
+        out->val.integer = out->arg1->val.integer - out->arg2->val.integer;
+    } else if (out->arg1->type == INTEGER && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = (double)out->arg1->val.integer - out->arg2->val.real;
+    } else if (out->arg1->type == REAL && out->arg2->type == INTEGER) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real - (double)out->arg2->val.integer;
+    } else if (out->arg1->type == REAL && out->arg2->type == REAL) {
+        out->type = REAL;
+        out->val.real = out->arg1->val.real - out->arg2->val.real;
     }
+    out->op = NOTHING;
 }
 
 void write_expr(FILE *f, expr *e)
