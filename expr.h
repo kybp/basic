@@ -16,7 +16,8 @@ typedef struct expr {
     struct expr *arg2;
 } expr;
 
-void eval(expr *e, symtab *table);
+void eval_expr(expr *e, symtab *table);
+expr *new_expr(expr *arg1, int op, expr *arg2);
 expr *new_int_expr(int n);
 expr *new_real_expr(double n);
 expr *new_str_expr(char *s);

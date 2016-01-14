@@ -8,7 +8,7 @@ void yyerror(char const *s);
 
 %}
 
-ID [-_0-9a-z]+
+ID [_0-9a-z]+
 
 %%
 

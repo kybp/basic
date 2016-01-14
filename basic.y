@@ -1,6 +1,5 @@
 %{
 #include <ctype.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -82,10 +81,19 @@ statement: gosub_stmt
 
 int_expr: INTEGER { $$ = new_int_expr($1); }
         | INT_VAR { $$ = new_var_expr(INT_VAR, $1); }
+        | int_expr ADD int_expr { $$ = new_expr($1, ADD, $3); }
+        | int_expr SUB int_expr { $$ = new_expr($1, SUB, $3); }
+        | int_expr MUL int_expr { $$ = new_expr($1, MUL, $3); }
+        | int_expr DIV int_expr { $$ = new_expr($1, DIV, $3); }
         ;
 
 real_expr: REAL     { $$ = new_real_expr($1); }
          | REAL_VAR { $$ = new_var_expr(REAL_VAR, $1); }
+         | real_expr ADD  real_expr { $$ = new_expr($1, ADD,  $3); }
+         | real_expr SUB  real_expr { $$ = new_expr($1, SUB,  $3); }
+         | real_expr MUL  real_expr { $$ = new_expr($1, MUL,  $3); }
+         | real_expr DIV  real_expr { $$ = new_expr($1, DIV,  $3); }
+         | real_expr EXPT real_expr { $$ = new_expr($1, EXPT, $3); }
          ;
 
 str_expr: STRING  { $$ = new_str_expr($1); }

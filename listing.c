@@ -10,7 +10,6 @@ void add_line_from_parent(line *parent, line *l, int line_no, statement *stmt);
 line *find_line(line *listing, int line_no);
 line *find_min(line *listing);
 void stmtcopy(statement *to, statement *from);
-void write_listing(line *listing, FILE *file);
 
 void add_line(line *listing, int line_no, statement *stmt)
 {
@@ -95,7 +94,7 @@ int eval_stmt(statement *stmt, stack *st, symtab *table) {
     case GOTO:
         return stmt->arg1->val.integer;
     case IF:
-        eval(stmt->arg1, table);
+        eval_expr(stmt->arg1, table);
         if (stmt->arg1->val.integer) return stmt->arg2->val.integer;
         break;
     case LET:
@@ -121,6 +120,7 @@ int eval_stmt(statement *stmt, stack *st, symtab *table) {
         }
         break;
     case PRINT:
+        eval_expr(stmt->arg1, table);
         write_expr(stdout, stmt->arg1);
         printf("\n");
         break;
@@ -198,8 +198,9 @@ void write_stmt(statement *stmt, FILE *f) {
         fprintf(f, "GOTO %d", stmt->arg1->val.integer);
         break;
     case IF:
-        fprintf(f, "IF %d GOTO %d",
-                stmt->arg1->val.integer, stmt->arg2->val.integer);
+        fprintf(f, "IF ");
+        write_expr(f, stmt->arg1);
+        fprintf(f, " GOTO %d", stmt->arg2->val.integer);
         break;
     case LET:
         fprintf(f, "LET %s = ", stmt->arg1->val.string);

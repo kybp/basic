@@ -17,6 +17,6 @@ typedef struct symtab {
 void defvar(char *name, int type, void *data, symtab *table);
 int lookup_int(char *name, symtab *table, int *n);
 int lookup_real(char *name, symtab *table, double *n);
-int lookup_str(char *name, symtab *table, char **s);
+int lookup_str(char *name, symtab *table, char *s[]);
 
 #endif
