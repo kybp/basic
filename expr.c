@@ -86,7 +86,7 @@ void eval_expr(expr *in, expr *out, symtab *table)
             exit(1);
         }
     } break;
-    case STR_VAR: {             /* segfaults */
+    case STR_VAR: {
         char *s = (char *)malloc(MAX_LINE);
         if (lookup_str(in->val.string, table, &s)) {
             out->type = STRING;
