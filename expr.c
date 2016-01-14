@@ -10,7 +10,6 @@
 
 void add_expr(expr *in, expr *out, symtab *table);
 void div_expr(expr *in, expr *out, symtab *table);
-void free_rec(expr *e);
 void mul_expr(expr *in, expr *out, symtab *table);
 void pow_expr(expr *in, expr *out, symtab *table);
 void sub_expr(expr *in, expr *out, symtab *table);
@@ -62,16 +61,12 @@ void eval_expr(expr *in, expr *out, symtab *table)
     case INTEGER: case REAL: case STRING:
         out->type = in->type;
         out->val  = in->val;
-        free_rec(out->arg1);
-        free_rec(out->arg2);
         return;
     case INT_VAR: {
         int n;
         if (lookup_int(in->val.string, table, &n)) {
             out->type = INTEGER;
             out->val.integer = n;
-            free_rec(out->arg1);
-            free_rec(out->arg2);
             return;
         } else {
             fprintf(stderr, "undefined integer variable '%s'\n",
@@ -84,8 +79,6 @@ void eval_expr(expr *in, expr *out, symtab *table)
         if (lookup_real(in->val.string, table, &d)) {
             out->type = REAL;
             out->val.real = d;
-            free_rec(out->arg1);
-            free_rec(out->arg2);
             return;
         } else {
             fprintf(stderr, "undefined real variable '%s'\n",
@@ -98,8 +91,6 @@ void eval_expr(expr *in, expr *out, symtab *table)
         if (lookup_str(in->val.string, table, &s)) {
             out->type = STRING;
             out->val.string = s;
-            free_rec(out->arg1);
-            free_rec(out->arg2);
             return;
         } else {
             fprintf(stderr, "undefined string variable '%s'\n",
@@ -131,17 +122,6 @@ void eval_expr(expr *in, expr *out, symtab *table)
     default:
         fprintf(stderr, "unrecognised operation\n");
         exit(1);
-    }
-    free_rec(out->arg1);
-    free_rec(out->arg2);
-}
-
-void free_rec(expr *e)
-{
-    if (e) {
-        if (e->arg1) free_rec(e->arg1);
-        if (e->arg2) free_rec(e->arg2);
-        free(e);
     }
 }
 

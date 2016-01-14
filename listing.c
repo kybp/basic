@@ -86,6 +86,8 @@ void eval_listing(line *listing, symtab *table)
  */
 int eval_stmt(statement *stmt, stack *st, symtab *table) {
     expr out;
+    out.arg1 = (expr *)malloc(sizeof(expr));
+    out.arg2 = (expr *)malloc(sizeof(expr));
     /* If the stack is NULL that means we're running interactively, so
      * any commands that modify the stack should check for NULL and
      * refuse to run */
@@ -128,12 +130,18 @@ int eval_stmt(statement *stmt, stack *st, symtab *table) {
         break;
     case RETURN:
         if (stack_is_empty(st)) {
+            free(out.arg1);
+            free(out.arg2);
             return NOTHING;
         } else {
+            free(out.arg1);
+            free(out.arg2);
             return pop(st);
         }
         break;
     }
+    free(out.arg1);
+    free(out.arg2);
     return NEXT_LINE;
 }
 
