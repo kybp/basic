@@ -30,6 +30,7 @@ ID [_0-9a-z]+
 "gosub"          { return GOSUB;  }
 "goto"           { return GOTO;   }
 "if"             { return IF;     }
+"input"          { return INPUT;  }
 "let"            { return LET;    }
 "?"              { return PRINT;  }
 "print"          { return PRINT;  }

@@ -6,6 +6,8 @@
 #include "stack.h"
 #include "symtab.h"
 
+#define MAX_LINE 1024
+
 void add_line_from_parent(line *parent, line *l, int line_no, statement *stmt);
 line *find_line(line *listing, int line_no);
 line *find_min(line *listing);
@@ -100,6 +102,30 @@ int eval_stmt(statement *stmt, stack *st, symtab *table) {
         eval_expr(stmt->arg1, &out, table);
         if (out.val.integer) return stmt->arg2->val.integer;
         break;
+    case INPUT: {
+        char s[MAX_LINE];
+        puts(stmt->arg1->val.string);
+        fgets(s, MAX_LINE, stdin);
+        switch (stmt->arg2->type) {
+        case INT_VAR: {
+            int *n = (int *)malloc(sizeof(int));
+            *n = atoi(s);
+            defvar(stmt->arg2->val.string, INTEGER, (void *)n, table);
+        } break;
+        case REAL_VAR: {
+            double *d = (double *)malloc(sizeof(double));
+            *d = atof(s);
+            defvar(stmt->arg2->val.string, REAL, (void *)d, table);
+        } break;
+        case STR_VAR: {
+            size_t len = strlen(s);
+            char *t = (char *)malloc(len);
+            strncpy(t, s, len);
+            t[len - 1] = '\0';
+            defvar(stmt->arg2->val.string, STRING, (void *)s, table);
+        } break;
+        }
+    } break;
     case LET:
         eval_expr(stmt->arg2, &out, table);
         switch (out.type) {
@@ -211,6 +237,12 @@ void write_stmt(statement *stmt, FILE *f) {
         fprintf(f, "IF ");
         write_expr(f, stmt->arg1);
         fprintf(f, " GOTO %d", stmt->arg2->val.integer);
+        break;
+    case INPUT:
+        fprintf(f, "INPUT ");
+        write_expr(f, stmt->arg1);
+        fprintf(f, ", ");
+        write_expr(f, stmt->arg2);
         break;
     case LET:
         fprintf(f, "LET %s = ", stmt->arg1->val.string);

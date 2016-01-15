@@ -32,7 +32,7 @@ static symtab sym;
 }
 
 %token REAL_CAST ROUND
-%token GOSUB GOTO IF LET PRINT RETURN
+%token GOSUB GOTO IF INPUT LET PRINT RETURN
 %token LIST LOAD NEW RUN SAVE
 %token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
@@ -72,6 +72,7 @@ command: list_stmt
 statement: gosub_stmt
          | goto_stmt
          | if_stmt
+         | input_stmt
          | let_stmt
          | print_stmt
          | return_stmt
@@ -150,19 +151,36 @@ if_stmt: IF int_expr GOTO INTEGER {
  }
 ;
 
+input_stmt: INPUT str_expr COMMA INT_VAR {
+    current_statement.command = INPUT;
+    current_statement.arg1 = $2;
+    current_statement.arg2 = new_var_expr(INT_VAR, $4);
+ }
+| INPUT str_expr COMMA REAL_VAR {
+    current_statement.command = INPUT;
+    current_statement.arg1 = $2;
+    current_statement.arg2 = new_var_expr(REAL_VAR, $4);
+ }
+| INPUT str_expr COMMA STR_VAR {
+    current_statement.command = INPUT;
+    current_statement.arg1 = $2;
+    current_statement.arg2 = new_var_expr(STR_VAR, $4);
+ }
+;
+
 let_stmt: LET INT_VAR EQ int_expr {
     current_statement.command = LET;
-    current_statement.arg1 = new_var_expr(INTEGER, $2);
+    current_statement.arg1 = new_var_expr(INT_VAR, $2);
     current_statement.arg2 = $4;
  }
 | LET REAL_VAR EQ real_expr {
     current_statement.command = LET;
-    current_statement.arg1 = new_var_expr(REAL, $2);
+    current_statement.arg1 = new_var_expr(REAL_VAR, $2);
     current_statement.arg2 = $4;
  }
 | LET STR_VAR EQ str_expr {
     current_statement.command = LET;
-    current_statement.arg1 = new_var_expr(STRING, $2);
+    current_statement.arg1 = new_var_expr(STR_VAR, $2);
     current_statement.arg2 = $4;
  }
 ;
