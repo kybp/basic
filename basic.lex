@@ -34,6 +34,7 @@ ID [_0-9a-z]+
 "let"            { return LET;    }
 "?"              { return PRINT;  }
 "print"          { return PRINT;  }
+"rand"           { return RAND;   }
 "rem"[^\n]*      { /* ignore comments */ }
 "return"         { return RETURN; }
 

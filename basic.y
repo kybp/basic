@@ -32,7 +32,7 @@ static symtab sym;
 }
 
 %token REAL_CAST ROUND
-%token GOSUB GOTO IF INPUT LET PRINT RETURN
+%token GOSUB GOTO IF INPUT LET PRINT RAND RETURN
 %token LIST LOAD NEW RUN SAVE
 %token COMMA SEMI LPAREN RPAREN EOL
 
@@ -92,6 +92,7 @@ num_expr: int_expr
 
 int_expr: INTEGER { $$ = new_int_expr($1); }
         | INT_VAR { $$ = new_var_expr(INT_VAR, $1); }
+        | RAND LPAREN int_expr RPAREN { $$ = new_expr($3, RAND, NULL); }
         | num_expr LT   num_expr { $$ = new_expr($1, LT,   $3); }
         | num_expr LE   num_expr { $$ = new_expr($1, LE,   $3); }
         | num_expr EQ   num_expr { $$ = new_expr($1, EQ,   $3); }

@@ -173,6 +173,11 @@ void eval_expr(expr *in, expr *out, symtab *table)
         out->type = INTEGER;
         out->val.integer = compare(out->arg1, out->arg2, NE);
         break;
+    case RAND:
+        eval_expr(in->arg1, out->arg1, table);
+        out->type = INTEGER;
+        out->val.integer = rand() % out->arg1->val.integer;
+        break;
     default:
         fprintf(stderr, "unrecognised operation\n");
         exit(1);
@@ -316,6 +321,36 @@ void write_expr(FILE *f, expr *e)
         write_expr(f, e->arg1);
         fprintf(f, " ** ");
         write_expr(f, e->arg2);
+        return;
+    case LT:
+        write_expr(f, e->arg1);
+        fprintf(f, " < ");
+        write_expr(f, e->arg2);
+        return;
+    case LE:
+        write_expr(f, e->arg1);
+        fprintf(f, " <= ");
+        write_expr(f, e->arg2);
+        return;
+    case EQ:
+        write_expr(f, e->arg1);
+        fprintf(f, " = ");
+        write_expr(f, e->arg2);
+        return;
+    case GE:
+        write_expr(f, e->arg1);
+        fprintf(f, " >= ");
+        write_expr(f, e->arg2);
+        return;
+    case NE:
+        write_expr(f, e->arg1);
+        fprintf(f, " <> ");
+        write_expr(f, e->arg2);
+        return;
+    case RAND:
+        fprintf(f, "RAND(");
+        write_expr(f, e->arg1);
+        fprintf(f, ")");
         return;
     default:
         fprintf(f, "???");
