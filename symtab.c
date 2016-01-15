@@ -50,13 +50,13 @@ int lookup_int(char *name, symtab *table, int *n)
     }
 }
 
-int lookup_real(char *name, symtab *table, double *n)
+int lookup_real(char *name, symtab *table, double *d)
 {
     identifier *id = lookup_val(name, table);
     if (id == NULL) {
         return 0;
     } else {
-        *n = *(double *)id->data;
+        *d = *(double *)id->data;
         return 1;
     }
 }

@@ -173,11 +173,12 @@ void eval_expr(expr *in, expr *out, symtab *table)
         out->type = INTEGER;
         out->val.integer = compare(out->arg1, out->arg2, NE);
         break;
-    case RAND:
-        eval_expr(in->arg1, out->arg1, table);
+    case RAND: {
+        expr arg;
+        eval_expr(in->arg1, &arg, table);
         out->type = INTEGER;
-        out->val.integer = rand() % out->arg1->val.integer;
-        break;
+        out->val.integer = rand() % arg.val.integer;
+    } break;
     default:
         fprintf(stderr, "unrecognised operation\n");
         exit(1);

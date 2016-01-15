@@ -83,26 +83,36 @@ statement: gosub_stmt
 
 num_expr: int_expr
         | real_expr
-        | num_expr ADD  num_expr { $$ = new_expr($1, ADD,  $3); }
-        | num_expr SUB  num_expr { $$ = new_expr($1, SUB,  $3); }
-        | num_expr MUL  num_expr { $$ = new_expr($1, MUL,  $3); }
-        | num_expr DIV  num_expr { $$ = new_expr($1, DIV,  $3); }
-        | num_expr EXPT num_expr { $$ = new_expr($1, EXPT, $3); }
         ;
 
 int_expr: INTEGER { $$ = new_int_expr($1); }
         | INT_VAR { $$ = new_var_expr(INT_VAR, $1); }
         | RAND LPAREN int_expr RPAREN { $$ = new_expr($3, RAND, NULL); }
-        | num_expr LT   num_expr { $$ = new_expr($1, LT,   $3); }
-        | num_expr LE   num_expr { $$ = new_expr($1, LE,   $3); }
-        | num_expr EQ   num_expr { $$ = new_expr($1, EQ,   $3); }
-        | num_expr GE   num_expr { $$ = new_expr($1, GE,   $3); }
-        | num_expr GT   num_expr { $$ = new_expr($1, GT,   $3); }
-        | num_expr NE   num_expr { $$ = new_expr($1, NE,   $3); }
+        | int_expr ADD  int_expr { $$ = new_expr($1, ADD,  $3); }
+        | int_expr SUB  int_expr { $$ = new_expr($1, SUB,  $3); }
+        | int_expr MUL  int_expr { $$ = new_expr($1, MUL,  $3); }
+        | int_expr DIV  int_expr { $$ = new_expr($1, DIV,  $3); }
+        | int_expr LT   int_expr { $$ = new_expr($1, LT,   $3); }
+        | int_expr LE   int_expr { $$ = new_expr($1, LE,   $3); }
+        | int_expr EQ   int_expr { $$ = new_expr($1, EQ,   $3); }
+        | int_expr GE   int_expr { $$ = new_expr($1, GE,   $3); }
+        | int_expr GT   int_expr { $$ = new_expr($1, GT,   $3); }
+        | int_expr NE   int_expr { $$ = new_expr($1, NE,   $3); }
         ;
 
 real_expr: REAL     { $$ = new_real_expr($1); }
          | REAL_VAR { $$ = new_var_expr(REAL_VAR, $1); }
+         | real_expr ADD  real_expr { $$ = new_expr($1, ADD,  $3); }
+         | real_expr SUB  real_expr { $$ = new_expr($1, SUB,  $3); }
+         | real_expr MUL  real_expr { $$ = new_expr($1, MUL,  $3); }
+         | real_expr DIV  real_expr { $$ = new_expr($1, DIV,  $3); }
+         | real_expr EXPT real_expr { $$ = new_expr($1, EXPT, $3); }
+         | real_expr LT   real_expr { $$ = new_expr($1, LT,   $3); }
+         | real_expr LE   real_expr { $$ = new_expr($1, LE,   $3); }
+         | real_expr EQ   real_expr { $$ = new_expr($1, EQ,   $3); }
+         | real_expr GE   real_expr { $$ = new_expr($1, GE,   $3); }
+         | real_expr GT   real_expr { $$ = new_expr($1, GT,   $3); }
+         | real_expr NE   real_expr { $$ = new_expr($1, NE,   $3); }
          ;
 
 str_expr: STRING  { $$ = new_str_expr($1); }
