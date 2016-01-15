@@ -34,13 +34,14 @@ static symtab sym;
 %token REAL_CAST ROUND
 %token GOSUB GOTO IF INPUT LET PRINT RETURN
 %token LIST LOAD NEW RUN SAVE
-%token LT LE EQ GE GT NE
 %token COMMA SEMI LPAREN RPAREN EOL
 
 %left ADD SUB
 %left MUL DIV
 %right EXPT
+%nonassoc LT LE EQ GE GT NE
 
+%type <expr> num_expr
 %type <expr> int_expr
 %type <expr> real_expr
 %type <expr> str_expr
@@ -80,21 +81,27 @@ statement: gosub_stmt
 
 /* Expressions */
 
+num_expr: int_expr
+        | real_expr
+        | num_expr ADD  num_expr { $$ = new_expr($1, ADD,  $3); }
+        | num_expr SUB  num_expr { $$ = new_expr($1, SUB,  $3); }
+        | num_expr MUL  num_expr { $$ = new_expr($1, MUL,  $3); }
+        | num_expr DIV  num_expr { $$ = new_expr($1, DIV,  $3); }
+        | num_expr EXPT num_expr { $$ = new_expr($1, EXPT, $3); }
+        ;
+
 int_expr: INTEGER { $$ = new_int_expr($1); }
         | INT_VAR { $$ = new_var_expr(INT_VAR, $1); }
-        | int_expr ADD int_expr { $$ = new_expr($1, ADD, $3); }
-        | int_expr SUB int_expr { $$ = new_expr($1, SUB, $3); }
-        | int_expr MUL int_expr { $$ = new_expr($1, MUL, $3); }
-        | int_expr DIV int_expr { $$ = new_expr($1, DIV, $3); }
+        | num_expr LT   num_expr { $$ = new_expr($1, LT,   $3); }
+        | num_expr LE   num_expr { $$ = new_expr($1, LE,   $3); }
+        | num_expr EQ   num_expr { $$ = new_expr($1, EQ,   $3); }
+        | num_expr GE   num_expr { $$ = new_expr($1, GE,   $3); }
+        | num_expr GT   num_expr { $$ = new_expr($1, GT,   $3); }
+        | num_expr NE   num_expr { $$ = new_expr($1, NE,   $3); }
         ;
 
 real_expr: REAL     { $$ = new_real_expr($1); }
          | REAL_VAR { $$ = new_var_expr(REAL_VAR, $1); }
-         | real_expr ADD  real_expr { $$ = new_expr($1, ADD,  $3); }
-         | real_expr SUB  real_expr { $$ = new_expr($1, SUB,  $3); }
-         | real_expr MUL  real_expr { $$ = new_expr($1, MUL,  $3); }
-         | real_expr DIV  real_expr { $$ = new_expr($1, DIV,  $3); }
-         | real_expr EXPT real_expr { $$ = new_expr($1, EXPT, $3); }
          ;
 
 str_expr: STRING  { $$ = new_str_expr($1); }
@@ -185,15 +192,11 @@ let_stmt: LET INT_VAR EQ int_expr {
  }
 ;
 
-print_stmt: PRINT int_expr {
+print_stmt: PRINT num_expr {
     current_statement.command = PRINT;
     current_statement.arg1 = $2;
  }
 | PRINT str_expr {
-    current_statement.command = PRINT;
-    current_statement.arg1 = $2;
- }
-| PRINT real_expr {
     current_statement.command = PRINT;
     current_statement.arg1 = $2;
  }

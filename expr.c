@@ -9,6 +9,7 @@
 #define NOTHING 0
 
 void add_expr(expr *in, expr *out, symtab *table);
+int compare(expr *e1, expr *e2, int comp);
 void div_expr(expr *in, expr *out, symtab *table);
 void mul_expr(expr *in, expr *out, symtab *table);
 void pow_expr(expr *in, expr *out, symtab *table);
@@ -31,6 +32,23 @@ void add_expr(expr *in, expr *out, symtab *table)
     } else if (out->arg1->type == REAL && out->arg2->type == REAL) {
         out->type = REAL;
         out->val.real = out->arg1->val.real + out->arg2->val.real;
+    }
+}
+
+int compare(expr *e1, expr *e2, int comp)
+{
+    double x = e1->type == REAL ? e1->val.real : (double)e1->val.integer;
+    double y = e2->type == REAL ? e2->val.real : (double)e2->val.integer;
+    switch (comp) {
+    case LT: return x <  y;
+    case LE: return x <= y;
+    case EQ: return x == y;
+    case GE: return x >= y;
+    case GT: return x >  y;
+    case NE: return x != y;
+    default:
+        fprintf(stderr, "unrecognised comparison operator\n");
+        exit(1);
     }
 }
 
@@ -118,6 +136,42 @@ void eval_expr(expr *in, expr *out, symtab *table)
         break;
     case DIV:
         div_expr(in, out, table);
+        break;
+    case LT:
+        eval_expr(in->arg1, out->arg1, table);
+        eval_expr(in->arg2, out->arg2, table);
+        out->type = INTEGER;
+        out->val.integer = compare(out->arg1, out->arg2, LT);
+        break;
+    case LE:
+        eval_expr(in->arg1, out->arg1, table);
+        eval_expr(in->arg2, out->arg2, table);
+        out->type = INTEGER;
+        out->val.integer = compare(out->arg1, out->arg2, LE);
+        break;
+    case EQ:
+        eval_expr(in->arg1, out->arg1, table);
+        eval_expr(in->arg2, out->arg2, table);
+        out->type = INTEGER;
+        out->val.integer = compare(out->arg1, out->arg2, EQ);
+        break;
+    case GE:
+        eval_expr(in->arg1, out->arg1, table);
+        eval_expr(in->arg2, out->arg2, table);
+        out->type = INTEGER;
+        out->val.integer = compare(out->arg1, out->arg2, GE);
+        break;
+    case GT:
+        eval_expr(in->arg1, out->arg1, table);
+        eval_expr(in->arg2, out->arg2, table);
+        out->type = INTEGER;
+        out->val.integer = compare(out->arg1, out->arg2, GT);
+        break;
+    case NE:
+        eval_expr(in->arg1, out->arg1, table);
+        eval_expr(in->arg2, out->arg2, table);
+        out->type = INTEGER;
+        out->val.integer = compare(out->arg1, out->arg2, NE);
         break;
     default:
         fprintf(stderr, "unrecognised operation\n");
