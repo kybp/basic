@@ -57,7 +57,7 @@ void eval_listing(line *listing, symtab *table)
     init_stack(&st, 16);
 
     listing = find_min(listing->right);
-    if (listing->stmt == NULL) {  /* no lines in listing */
+    if (listing == NULL || listing->stmt == NULL) {  /* no lines in listing */
         return;
     }
 
@@ -188,6 +188,7 @@ line *find_line(line *listing, int line_no)
 line *find_min(line *listing)
 {
     line *min = listing;
+    if (min == NULL) return min;
     while (listing->left) min = listing->left;
     return min;
 }
