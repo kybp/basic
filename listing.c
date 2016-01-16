@@ -11,6 +11,9 @@
 void add_line_from_parent(line *parent, line *l, int line_no, statement *stmt);
 line *find_line(line *listing, int line_no);
 line *find_min(line *listing);
+void insert_branch(line **left, line *right);
+void remove_line(line *listing, int line_no);
+void remove_line_from_parent(line *p, line *l, int line_no);
 void stmtcopy(statement *to, statement *from);
 
 void add_line(line *listing, int line_no, statement *stmt)
@@ -187,6 +190,41 @@ line *find_min(line *listing)
     line *min = listing;
     while (listing->left) min = listing->left;
     return min;
+}
+
+void insert_branch(line **left, line *right)
+{
+    if (*left == NULL) {
+        *left = right;
+    } else if ((*left)->right == NULL) {
+        (*left)->right = right;
+    } else {
+        line *old_right = (*left)->right;
+        (*left)->right = right;
+        insert_branch(&(*left)->left, old_right);
+    }
+}
+
+void remove_line(line *listing, int line_no)
+{
+    remove_line_from_parent(listing, listing, line_no);
+}
+
+void remove_line_from_parent(line *p, line *l, int line_no)
+{
+    if (l == NULL) { /* no such line, do nothing */
+        return;
+    } else if (line_no == l->line_no) {
+        insert_branch(&l->left, l->right);
+        if (l->line_no < p->line_no) p->left = l->left;
+        else p->right = l->left;
+        free(l->stmt);
+        free(l);
+    } else if (line_no < l->line_no) {
+        remove_line_from_parent(l, l->left, line_no);
+    } else {
+        remove_line_from_parent(l, l->right, line_no);
+    }
 }
 
 void reset_listing(line *listing)

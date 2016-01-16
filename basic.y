@@ -56,6 +56,7 @@ static symtab sym;
 %%
 
 line: /* nothing */
+| line INTEGER EOL { remove_line(&lst, $2); }
 | line INTEGER statement EOL {
     add_line(&lst, $2, &current_statement);
  }
