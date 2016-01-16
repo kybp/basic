@@ -105,7 +105,7 @@ int eval_stmt(statement *stmt, stack *st, symtab *table) {
     case INPUT: {
         char s[MAX_LINE];
         puts(stmt->arg1->val.string);
-        fgets(s, MAX_LINE, stdin);
+        if (fgets(s, MAX_LINE, stdin) == NULL) exit(1); /* got EOF */
         switch (stmt->arg2->type) {
         case INT_VAR: {
             int *n = (int *)malloc(sizeof(int));
