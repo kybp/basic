@@ -31,7 +31,7 @@ static symtab sym;
     struct expr *expr;
 }
 
-%token REAL_CAST ROUND
+%token CEIL FLOOR REAL_CAST ROUND
 %token GOSUB GOTO IF INPUT LET PRINT RAND RETURN
 %token LIST LOAD NEW RUN SAVE
 %token COMMA SEMI LPAREN RPAREN EOL
@@ -88,7 +88,10 @@ num_expr: int_expr
 
 int_expr: INTEGER { $$ = new_int_expr($1); }
         | INT_VAR { $$ = new_var_expr(INT_VAR, $1); }
-        | RAND LPAREN int_expr RPAREN { $$ = new_expr($3, RAND, NULL); }
+        | CEIL  LPAREN real_expr RPAREN { $$ = new_expr($3, CEIL,  NULL); }
+        | FLOOR LPAREN real_expr RPAREN { $$ = new_expr($3, FLOOR, NULL); }
+        | ROUND LPAREN real_expr RPAREN { $$ = new_expr($3, ROUND, NULL); }
+        | RAND  LPAREN int_expr  RPAREN { $$ = new_expr($3, RAND,  NULL); }
         | int_expr ADD  int_expr { $$ = new_expr($1, ADD,  $3); }
         | int_expr SUB  int_expr { $$ = new_expr($1, SUB,  $3); }
         | int_expr MUL  int_expr { $$ = new_expr($1, MUL,  $3); }
@@ -101,8 +104,10 @@ int_expr: INTEGER { $$ = new_int_expr($1); }
         | int_expr NE   int_expr { $$ = new_expr($1, NE,   $3); }
         ;
 
-real_expr: REAL     { $$ = new_real_expr($1); }
-         | REAL_VAR { $$ = new_var_expr(REAL_VAR, $1); }
+real_expr: REAL      { $$ = new_real_expr($1); }
+         | REAL_VAR  { $$ = new_var_expr(REAL_VAR, $1); }
+         | REAL_CAST LPAREN int_expr RPAREN {
+             $$ = new_expr($3, REAL_CAST, NULL); }
          | real_expr ADD  real_expr { $$ = new_expr($1, ADD,  $3); }
          | real_expr SUB  real_expr { $$ = new_expr($1, SUB,  $3); }
          | real_expr MUL  real_expr { $$ = new_expr($1, MUL,  $3); }

@@ -24,6 +24,8 @@ ID [_0-9a-z]+
 "/"              { return DIV;  }
 "**"             { return EXPT; }
 
+"ceil"           { return CEIL;      }
+"floor"          { return FLOOR;     }
 "real"           { return REAL_CAST; }
 "round"          { return ROUND;     }
 

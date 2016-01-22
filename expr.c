@@ -173,11 +173,35 @@ void eval_expr(expr *in, expr *out, symtab *table)
         out->type = INTEGER;
         out->val.integer = compare(out->arg1, out->arg2, NE);
         break;
+    case CEIL: {
+        expr arg;
+        eval_expr(in->arg1, &arg, table);
+        out->type = INTEGER;
+        out->val.integer = (int)ceil(arg.val.real);
+    } break;
+    case FLOOR: {
+        expr arg;
+        eval_expr(in->arg1, &arg, table);
+        out->type = INTEGER;
+        out->val.integer = (int)floor(arg.val.real);
+    } break;
     case RAND: {
         expr arg;
         eval_expr(in->arg1, &arg, table);
         out->type = INTEGER;
         out->val.integer = rand() % arg.val.integer;
+    } break;
+    case REAL_CAST: {
+        expr arg;
+        eval_expr(in->arg1, &arg, table);
+        out->type = REAL;
+        out->val.real = (double)arg.val.integer;
+    } break;
+    case ROUND: {
+        expr arg;
+        eval_expr(in->arg1, &arg, table);
+        out->type = INTEGER;
+        out->val.integer = (int)round(arg.val.real);
     } break;
     default:
         fprintf(stderr, "unrecognised operation\n");
