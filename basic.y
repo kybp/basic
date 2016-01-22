@@ -32,7 +32,8 @@ static symtab sym;
 }
 
 %token CEIL FLOOR REAL_CAST ROUND
-%token GOSUB GOTO IF INPUT LET PRINT RAND RETURN
+%token RAND SQRT
+%token GOSUB GOTO IF INPUT LET PRINT RETURN
 %token LIST LOAD NEW RUN SAVE
 %token COMMA SEMI LPAREN RPAREN EOL
 
@@ -108,6 +109,7 @@ real_expr: REAL      { $$ = new_real_expr($1); }
          | REAL_VAR  { $$ = new_var_expr(REAL_VAR, $1); }
          | REAL_CAST LPAREN int_expr RPAREN {
              $$ = new_expr($3, REAL_CAST, NULL); }
+         | SQRT LPAREN num_expr RPAREN { $$ = new_expr($3, SQRT, NULL); }
          | real_expr ADD  real_expr { $$ = new_expr($1, ADD,  $3); }
          | real_expr SUB  real_expr { $$ = new_expr($1, SUB,  $3); }
          | real_expr MUL  real_expr { $$ = new_expr($1, MUL,  $3); }

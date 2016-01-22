@@ -29,6 +29,9 @@ ID [_0-9a-z]+
 "real"           { return REAL_CAST; }
 "round"          { return ROUND;     }
 
+"rand"           { return RAND; }
+"sqrt"           { return SQRT; }
+
 "gosub"          { return GOSUB;  }
 "goto"           { return GOTO;   }
 "if"             { return IF;     }
@@ -36,7 +39,6 @@ ID [_0-9a-z]+
 "let"            { return LET;    }
 "?"              { return PRINT;  }
 "print"          { return PRINT;  }
-"rand"           { return RAND;   }
 "rem"[^\n]*      { /* ignore comments */ }
 "return"         { return RETURN; }
 

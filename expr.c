@@ -173,6 +173,23 @@ void eval_expr(expr *in, expr *out, symtab *table)
         out->type = INTEGER;
         out->val.integer = compare(out->arg1, out->arg2, NE);
         break;
+
+    /* Numerical functions */
+    case RAND: {
+        expr arg;
+        eval_expr(in->arg1, &arg, table);
+        out->type = INTEGER;
+        out->val.integer = rand() % arg.val.integer;
+    } break;
+    case SQRT: {
+        expr arg;
+        eval_expr(in->arg1, &arg, table);
+        out->type = REAL;
+        out->val.real = sqrt(arg.type == REAL ? arg.val.real :
+                             (double)arg.val.integer);
+    } break;
+
+    /* Casting */
     case CEIL: {
         expr arg;
         eval_expr(in->arg1, &arg, table);
@@ -184,12 +201,6 @@ void eval_expr(expr *in, expr *out, symtab *table)
         eval_expr(in->arg1, &arg, table);
         out->type = INTEGER;
         out->val.integer = (int)floor(arg.val.real);
-    } break;
-    case RAND: {
-        expr arg;
-        eval_expr(in->arg1, &arg, table);
-        out->type = INTEGER;
-        out->val.integer = rand() % arg.val.integer;
     } break;
     case REAL_CAST: {
         expr arg;
@@ -322,6 +333,7 @@ void write_expr(FILE *f, expr *e)
     }
 
     switch (e->op) {
+    /* Arithmetic */
     case ADD:
         write_expr(f, e->arg1);
         fprintf(f, " + ");
@@ -347,6 +359,8 @@ void write_expr(FILE *f, expr *e)
         fprintf(f, " ** ");
         write_expr(f, e->arg2);
         return;
+
+    /* Comparisons */
     case LT:
         write_expr(f, e->arg1);
         fprintf(f, " < ");
@@ -372,11 +386,41 @@ void write_expr(FILE *f, expr *e)
         fprintf(f, " <> ");
         write_expr(f, e->arg2);
         return;
+
+    /* Casts */
+    case CEIL:
+        fprintf(f, "CEIL(");
+        write_expr(f, e->arg1);
+        fprintf(f, ")");
+        return;
+    case FLOOR:
+        fprintf(f, "FLOOR(");
+        write_expr(f, e->arg1);
+        fprintf(f, ")");
+        return;
+    case REAL_CAST:
+        fprintf(f, "REAL(");
+        write_expr(f, e->arg1);
+        fprintf(f, ")");
+        return;
+    case ROUND:
+        fprintf(f, "ROUND(");
+        write_expr(f, e->arg1);
+        fprintf(f, ")");
+        return;
+
+    /* Numerical functions */
     case RAND:
         fprintf(f, "RAND(");
         write_expr(f, e->arg1);
         fprintf(f, ")");
         return;
+    case SQRT:
+        fprintf(f, "SQRT(");
+        write_expr(f, e->arg1);
+        fprintf(f, ")");
+        return;
+
     default:
         fprintf(f, "???");
         return;
